@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <script type="text/javascript" src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <script>
+        // Set the dimensions of the canvas / graph
+        var margin = {
+                top: 30,
+                right: 20,
+                bottom: 30,
+                left: 50
+            },
+            width = 1300 - margin.left - margin.right,
+            height = 250 - margin.top - margin.bottom;
+
+        var x = d3.scaleLinear()
+            .range([0, width]);
+
+        var y = d3.scaleLinear()
+            .range([height, 0]);
+
+        var xAxis = d3.axisBottom()
+            .scale(x);
+
+        var yAxis = d3.axisLeft()
+            .scale(y);
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var chart = svg.append("g")
+            .attr("id", "chart");
+
+        var file = "./holidays.csv";
+
+        d3.csv(file).then((data) => {
+            data = data.filter(d =>
+                d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
+            );
+            // Get the data
+            year_data = {};
+            data.forEach(function(d) {
+                let year = d.year_of_event;
+                if (year in year_data) {
+                    year_data[Number(year)] += 1;
+                } else {
+                    year_data[Number(year)] = 1;
+                };
+            });
+
+
+
+            // Scale the range of the data
+            // x.domain(d3.extent(data, function(d) { return d.Value; }));
+            delete year_data[0];
+            let counts = Object.values(year_data);
+            let count_extent = d3.extent(counts);
+            let year_extent = d3.extent(Object.keys(year_data));
+            console.log([Number(year_extent[0]), Number(year_extent[1])]);
+            x.domain([Number(year_extent[0]), Number(year_extent[1])]);
+            y.domain(count_extent);
+
+            svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + (height + 5) + ")")
+                .call(xAxis)
+                .append("text")
+                .attr("class", "label")
+                .attr("x", width)
+                .attr("y", -6)
+                .style("text-anchor", "end")
+                .text("Day");
+            /*
+            svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("class", "label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("amount");
+                */
+            let year_json = [];
+            for (let key in year_data) {
+                year_json.push({
+                    'year': Number(key),
+                    'count': year_data[key]
+                });
+            }
+            var groups = svg.selectAll("g.groups")
+                .data(year_json)
+                .enter()
+                .append("g")
+                .attr("transform", function(d) {
+                    console.log(d);
+                    return "translate(" + x(d.year) + ".0)";
+                });
+
+            var dots = groups.selectAll("circle")
+                .data(function(d) {
+                    return d3.range(1, +d.count + 1)
+                })
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("r", 3.5)
+                .attr("cy", function(d) {
+                    return y(d)
+                })
+                .style("fill", "blue")
+                .style("opacity", .5);
+        });
+    </script>
+</body>
+
+</html>
