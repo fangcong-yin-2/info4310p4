@@ -102,7 +102,6 @@
                 .enter()
                 .append("g")
                 .attr("transform", function(d) {
-                    console.log(d);
                     return "translate(" + x(d.year) + ".0)";
                 });
 
@@ -118,7 +117,61 @@
                 })
                 .style("fill", "blue")
                 .style("opacity", .5);
+            var line = svg.append('line')
+                            .attr('id','line')
+                            .attr('y1',height)
+                            .attr('y2',0)
+                            .style('stroke','black')
+                            .style("opacity", 0)
+            line.transition().duration(750)
+
+            var focusText = svg
+                            .append('g')
+                            .append('text')
+                            .style("opacity", 0)
+                            .attr("text-anchor", "left")
+                            .attr("alignment-baseline", "middle")
+
+            bisect = d3.bisector(year_json => year_json.year).right;
+
+            svg
+                .append('rect')
+                .style("fill", "none")
+                .style("pointer-events", "all")
+                .attr('width', width)
+                .attr('height', height)
+                .on('mouseover', mouseOver)
+                .on('mousemove', mouseMove)
+                .on('mouseout', mouseOut);
+            
+            function mouseOver(){
+                line.style("opacity", 1)
+                focusText.style("opacity",1)
+            }
+
+            function mouseMove(e){
+                let mouse = d3.pointer(e);
+                let this_x = x.invert(mouse[0]);
+                let i = bisect(year_json, this_x);
+                let selected_d = year_json[i];
+                line.attr('x1',x(selected_d.year))
+                    .attr('x2',x(selected_d.year));
+
+                focusText
+                        .html(selected_d.year)
+                        .attr('x',x(selected_d.year))
+                        .attr('y',0)
+            }
+
+            function mouseOut(){
+                line.style("opacity", 0)
+                focusText.style("opacity", 0)
+            }
+            // console.log(bisect);
+
         });
+
+        
     </script>
 </body>
 
