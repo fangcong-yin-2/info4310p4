@@ -16,19 +16,10 @@
                 left: 50
             },
             width = 1300 - margin.left - margin.right,
-            height = 250 - margin.top - margin.bottom;
+            height = 500 - margin.top - margin.bottom;
 
-        var x = d3.scaleLinear()
-            .range([0, width]);
-
-        var y = d3.scaleLinear()
-            .range([height, 0]);
-
-        var xAxis = d3.axisBottom()
-            .scale(x);
-
-        var yAxis = d3.axisLeft()
-            .scale(y);
+       
+        
 
         var svg = d3.select("body").append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -39,12 +30,31 @@
         var chart = svg.append("g")
             .attr("id", "chart");
 
-        var file = "./holidays.csv";
+        const yAxisArea = svg.append("g").attr("transform",`translate(${margin.left-2},${margin.top})`);
+        const xAxisArea = chart.append("g");
+
+        var clip = svg.append("defs").append("svg:clipPath").attr("id","clip").append("svg:rect")
+                        .attr("width", width).attr("height",height)
+                        .attr("x",0)
+                        .attr("y",0);
+        var scatter = svg.append('g').attr('clip-path','url(#clip)');
+
+
+        var file = "./holidays_2.csv";
+        // create a function that takes in zoom and the data array; output will be data as well but with x and y
+        // add x and y to each circles
+        // decide size of circles, dicide cancas into a grid - only one circle can be in a grid
+        // loop through data and figure out x (axis + transform)
+        // loop through again from position on the board to x and y 
+        // take year, convert to pixel 
 
         d3.csv(file).then((data) => {
+
             data = data.filter(d =>
                 d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
             );
+            
+            // console.log(data)
             // Get the data
             year_data = {};
             data.forEach(function(d) {
@@ -55,6 +65,16 @@
                     year_data[Number(year)] = 1;
                 };
             });
+            let countries = [];
+            for (let key in year_data){
+                let countries = [];
+                let country = data.filter(d => d.year_of_event == key);
+                for (let i = 0; i < country.length; i++){
+                    countries.push(country[i]['code'])
+                }
+                year_data[key][countries] = countries;
+                console.log(countries);
+            }
 
 
 
@@ -64,20 +84,34 @@
             let counts = Object.values(year_data);
             let count_extent = d3.extent(counts);
             let year_extent = d3.extent(Object.keys(year_data));
-            console.log([Number(year_extent[0]), Number(year_extent[1])]);
-            x.domain([Number(year_extent[0]), Number(year_extent[1])]);
-            y.domain(count_extent);
+            // console.log([Number(year_extent[0]), Number(year_extent[1])]);
 
-            svg.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate(0," + (height + 5) + ")")
-                .call(xAxis)
-                .append("text")
-                .attr("class", "label")
-                .attr("x", width)
-                .attr("y", -6)
-                .style("text-anchor", "end")
-                .text("Day");
+
+            var x = d3.scaleLinear().domain([Number(year_extent[0]), Number(year_extent[1])])
+            .range([0, width]);
+
+            var y = d3.scaleLinear().domain(count_extent)
+                .range([height, 0]);
+
+            var xAxis = svg.append("g").attr("transform", "translate(0," + (height + 5) + ")")
+                            .call(d3.axisBottom(x))
+
+            var yAxis = d3.axisLeft(y)
+
+
+            // yAxisArea.append("g").attr("class", "y axis").call(yAxis);
+            // xAxisArea.append("g").attr("class", "x axis").call(xAxis);
+
+            // xAxisArea.append("g")
+            //     .attr("class", "x axis")
+            //     .attr("transform", "translate(0," + (height + 5) + ")")
+            //     .call(xAxis)
+            //     .append("text")
+            //     .attr("class", "label")
+            //     .attr("x", width)
+            //     .attr("y", -6)
+            //     .style("text-anchor", "end")
+            //     .text("Day");
             /*
             svg.append("g")
                 .attr("class", "y axis")
@@ -94,10 +128,11 @@
             for (let key in year_data) {
                 year_json.push({
                     'year': Number(key),
-                    'count': year_data[key]
+                    'count': year_data[key],
+                    // 'code': year_data[Code]
                 });
             }
-            var groups = svg.selectAll("g.groups")
+            var groups = scatter.selectAll("g.groups")
                 .data(year_json)
                 .enter()
                 .append("g")
@@ -117,7 +152,8 @@
                 })
                 .style("fill", "blue")
                 .style("opacity", .5);
-            var line = svg.append('line')
+
+            var line = chart.append('line')
                             .attr('id','line')
                             .attr('y1',height)
                             .attr('y2',0)
@@ -125,7 +161,7 @@
                             .style("opacity", 0)
             line.transition().duration(750)
 
-            var focusText = svg
+            var focusText = chart
                             .append('g')
                             .append('text')
                             .style("opacity", 0)
@@ -134,7 +170,13 @@
 
             bisect = d3.bisector(year_json => year_json.year).right;
 
-            svg
+
+            var plotZoom = d3.zoom()
+                                // .scaleExtent([0.5, 20])
+                                // .extent([0,0],[width, height])
+                                .on('zoom', plotZoomed);
+
+            chart
                 .append('rect')
                 .style("fill", "none")
                 .style("pointer-events", "all")
@@ -142,7 +184,8 @@
                 .attr('height', height)
                 .on('mouseover', mouseOver)
                 .on('mousemove', mouseMove)
-                .on('mouseout', mouseOut);
+                .on('mouseout', mouseOut)
+                .call(plotZoom);
             
             function mouseOver(){
                 line.style("opacity", 1)
@@ -167,7 +210,59 @@
                 line.style("opacity", 0)
                 focusText.style("opacity", 0)
             }
-            // console.log(bisect);
+
+            // pan and zoom starts here
+            // var plotZoom = d3.zoom().on('zoom', plotZoomed);
+            // svg.call(plotZoom);
+            function plotZoomed(event) {    
+
+                var newX = event.transform.rescaleX(x);
+                xAxis.call(d3.axisBottom(newX));
+                // var newY = event.transform.rescaleX(y);
+                // yAxis.call(d3.axisBottom(newY));
+                groups.attr("transform", function(d) {
+                    return "translate(" + newX(d.year) + ".0)";
+                });
+                dots.selectAll("circle")
+                        .attr('cy', function(d) {
+                    return newX(d)
+                });
+
+                // add flags - isn't working for now
+                // if(event.transform.k > 3){
+                //     dots =  groups.selectAll("flags")
+                //                     .data(function(d) {
+                //                         return d3.range(1, +d.count + 1)
+                //                     })
+                //                     .enter().append("image")
+                //                     .attr("xlink:href", d => {
+                //                         let code = d.code
+                //                         console.log(code)
+                //                         return "https://flagsapi.com/" + code + "/flat/64.png";
+                //                     })
+                //                     .attr("class", "flags")
+                //                     // .attr("r", 3.5)
+                //                     .attr("y", function(d) {
+                //                         return y(d)
+                //                     })
+                //                     // .style("fill", "blue")
+                //                     // .style("opacity", .5);
+                //                     .call(enter => enter.transition().attr("opacity", 1))
+                // }
+
+                // console.log(event.transform);
+                // console.log(event.transform.toString());
+
+                // chart.attr("transform", event.transform);
+
+                // // update the scales on the axes/gridlines
+                // // rescale does not modify the source scale, just creates an adjusted copy
+                // // yAxis.scale(event.transform.rescaleY(y))
+                // xAxis.scale(event.transform.rescaleX(x))
+
+                // // apply new scaled axes (do not use a transition since zoom triggers so many events!)
+                // d3.select("g.x.axis").call(xAxis);
+                }
 
         });
 
