@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html>
-
+    <style>
+  
+       
+        .tooltip {
+            pointer-events: none;
+        }
+      
+      
+    
+      </style>
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <script type="text/javascript" src="https://d3js.org/d3.v7.min.js"></script>
@@ -40,7 +49,7 @@
         var scatter = svg.append('g').attr('clip-path','url(#clip)');
 
 
-        var file = "./holidays_2.csv";
+        var file = "./holidays_new.csv";
         // create a function that takes in zoom and the data array; output will be data as well but with x and y
         // add x and y to each circles
         // decide size of circles, dicide cancas into a grid - only one circle can be in a grid
@@ -58,11 +67,11 @@
             // Get the data
             year_data = {};
             data.forEach(function(d) {
-                let year = d.year_of_event;
+                let year = Number(d.year_of_event);
                 if (year in year_data) {
-                    year_data[Number(year)] += 1;
+                    year_data[year] += 1;
                 } else {
-                    year_data[Number(year)] = 1;
+                    year_data[year] = 1;
                 };
             });
             let countries = [];
@@ -73,9 +82,9 @@
                     countries.push(country[i]['code'])
                 }
                 year_data[key][countries] = countries;
-                console.log(countries);
             }
-
+            let continents = ['Asia', 'Europe', 'Africa', 'North America', 'South America','Oceania'];
+            let colorScale = d3.scaleOrdinal().domain(continents).range(d3.schemeCategory10);
 
 
             // Scale the range of the data
@@ -129,9 +138,9 @@
                 year_json.push({
                     'year': Number(key),
                     'count': year_data[key],
-                    // 'code': year_data[Code]
                 });
             }
+            /*
             var groups = scatter.selectAll("g.groups")
                 .data(year_json)
                 .enter()
@@ -152,7 +161,56 @@
                 })
                 .style("fill", "blue")
                 .style("opacity", .5);
+*/
 
+// Create the mouseover information panel
+let tooltipWidth = 300;
+    let tooltipHeight = 250;
+    let tooltip = chart.append("g")
+                     .attr("class","tooltip")
+                     .attr("visibility","hidden");
+    tooltip.append("rect")
+           .attr("fill", "grey")
+           .attr("opacity", 0.9)
+           .attr("x", -tooltipWidth / 2.0)
+           .attr("y", 0)
+           .attr("width",tooltipWidth)
+           .attr("height",tooltipHeight)
+    let txt = tooltip.append("text")
+                     .attr("fill", "white")
+                     .attr("text-anchor","middle")
+                     .attr("alignment-baseline","hanging")
+                     .attr("x", 0)
+                     .attr("y", 2);
+    let txt2 = tooltip.append("text")
+                     .attr("fill", "white")
+                     .attr("text-anchor","right")
+                     .attr("alignment-baseline","hanging")
+                     .attr("x", 0)
+                     .attr("y", 22);
+                     let txt3 = tooltip.append("text")
+                     .attr("fill", "white")
+                     .attr("text-anchor","right")
+                     .attr("alignment-baseline","hanging")
+                     .attr("x", 0)
+                     .attr("y", 40);
+
+            var dots = scatter.selectAll("circle")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("r", 3.5)
+                .attr("cy", function(d) {
+                    console.log()
+                    return y(Number(d.stack_index))-3.5
+                })
+                .attr("transform", function(d) {
+                    return "translate(" + x(Number(d.year)) + ".0)";
+                })
+                .attr("fill",d => colorScale(d['Continent']))
+                .style("opacity", .5)
+                .on('mouseover',mouseOverCircles)
+                .on('mouseout',mouseOutCircles);
             var line = chart.append('line')
                             .attr('id','line')
                             .attr('y1',height)
@@ -167,7 +225,8 @@
                             .style("opacity", 0)
                             .attr("text-anchor", "left")
                             .attr("alignment-baseline", "middle")
-
+            
+    
             bisect = d3.bisector(year_json => year_json.year).right;
 
 
@@ -188,8 +247,42 @@
                 .call(plotZoom);
             
             function mouseOver(){
-                line.style("opacity", 1)
-                focusText.style("opacity",1)
+                line.style("opacity", 1);
+                focusText.style("opacity",1);
+                
+            }
+
+            function mouseOverCircles(e){
+                tooltip.style("visibility","visible");
+                // Find the state SVG element and add stroke
+      let circle = d3.select(this);
+      
+      
+      // // Original version before adding the bonus mesh after class
+      // state.attr("stroke","black")
+      //      .attr("stroke-width", 3);
+      
+      // Using .datum() to recover the data for the state element (because we used a .join() to make it)...
+      // ... get the name of the state and count
+      let circleData= circle.datum();
+      console.log(circleData)
+      
+      txt.text(circleData['country']);
+      txt2.text(circleData['date_mdy']);
+      txt3.text('From: ' + circleData['independence_from']);
+      /*
+      // You can use the geoPath() generator to do all sorts of helpful things 
+      // let [xPos, yPos] = path.centroid( state.datum() );  // Get the pixel "center" of the state
+      
+      let bounds = path.bounds( state.datum() );   // Get the pixel boundaries of the state
+      // In both cases here, the geoPath() is parsing the fancy topoJSON data to figure out pixels using the projection
+      
+      // Place it at the bottom of the state, centered
+      let xPos = (bounds[0][0]+bounds[1][0])/2.0;
+      let yPos = bounds[1][1] - 15;
+      
+      // Transform the <g> group so that everything moves together easily
+      tooltip.attr("transform",`translate(${xPos},${yPos})`);*/
             }
 
             function mouseMove(e){
@@ -207,8 +300,12 @@
             }
 
             function mouseOut(){
-                line.style("opacity", 0)
-                focusText.style("opacity", 0)
+                line.style("opacity", 0);
+                focusText.style("opacity", 0);
+                
+            }
+            function mouseOutCircles(){
+                tooltip.style("visibility","hidden");
             }
 
             // pan and zoom starts here
@@ -220,7 +317,7 @@
                 xAxis.call(d3.axisBottom(newX));
                 // var newY = event.transform.rescaleX(y);
                 // yAxis.call(d3.axisBottom(newY));
-                groups.attr("transform", function(d) {
+                dots.attr("transform", function(d) {
                     return "translate(" + newX(d.year) + ".0)";
                 });
                 dots.selectAll("circle")
