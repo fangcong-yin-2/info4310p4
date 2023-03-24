@@ -53,6 +53,7 @@
         // loop through data and figure out x (axis + transform)
         // loop through again from position on the board to x and y 
         // take year, convert to pixel 
+        let dots;
 
         d3.csv(file).then((data) => {
 
@@ -190,7 +191,10 @@
                 .attr("alignment-baseline", "hanging")
                 .attr("x", 0)
                 .attr("y", 40);
-            var dots = scatter.selectAll("circle")
+            let image = tooltip.append('image')
+                .attr('x',0)
+                .attr('y',60)
+            dots = scatter.selectAll("circle")
                 .data(data)
                 .enter().append("circle")
                 .attr("class", "dot")
@@ -264,6 +268,7 @@
                 txt.text(circleData['country']);
                 txt2.text(circleData['date_mdy']);
                 txt3.text('From: ' + circleData['independence_from']);
+                image.attr("xlink:href", "flags/" + circleData['code'] + ".png")
                 /*
                 // You can use the geoPath() generator to do all sorts of helpful things 
                 // let [xPos, yPos] = path.centroid( state.datum() );  // Get the pixel "center" of the state
@@ -284,7 +289,7 @@
                 let this_x = x.invert(mouse[0]);
                 let i = bisect(year_json, this_x);
                 let selected_d = year_json[i];
-                console.log(x(selected_d.year));
+                // console.log(x(selected_d.year));
                 line.attr('x1', x(selected_d.year))
                     .attr('x2', x(selected_d.year));
 
@@ -317,55 +322,199 @@
                     // var newY = event.transform.rescaleX(y);
                     // yAxis.call(d3.axisBottom(newY));
                     newR = Math.max(3.5, 3.5 * event.transform.k / 4);
+                    // dots.attr("transform", function(d) {
+                    //         return "translate(" + newX(d.year) + ")";
+                    //     })
+                    //     .attr("r", newR)
+                    //     .attr("cy", d => y(d.stack_index) - newR);
 
-                    dots.attr("transform", function(d) {
+                    // 没成功
+                    // if(event.transform.k >= 3){
+                    //     dots.remove();
+                    //     dots = scatter.selectAll("image")
+                    //             .data(data)
+                    //             .join(
+                    //                 enter => enter.append('image').attr("xlink:href", d => {
+                    //                     let code = d.code.toLowerCase();
+                    //                     console.log(code)
+                    //                     return "flags/" + code + ".png";
+                    //                 })
+                    //                     .attr("y", d => y(d.stack_index) - newR)
+                    //                     .attr("width", 20)
+                    //                     .attr("height", 20)
+                    //                     .attr('class', 'icons')
+                    //                     .on("mouseover", mouseOver)
+                    //                     .on("mouseout", mouseOut)
+                    //                     .call(enter => enter.transition().attr("opacity", 1)),
+                    //             );
+                            // dots =  scatter.selectAll("flags")
+                            //         .data(data)
+                            //         .enter().append("image")
+                            //         .attr("xlink:href", d => {
+                            //             let code = d.code.toLowerCase();
+                            //             console.log(code)
+                            //             return "flags/" + code + ".png";
+                            //         })
+                            //         .attr("class", "flags")
+                            //         // .attr("r", 3.5)
+                            //         .attr("y", function(d) {
+                            //             return y(d.stack_index) - newR
+                            //         })
+                            //         .attr()
+                            //         // .style("fill", "blue")
+                            //         // .style("opacity", .5);
+                            //         .call(enter => enter.transition().attr("opacity", 1))
+                // }
+                    // }else{
+                        dots.attr("transform", function(d) {
                             return "translate(" + newX(d.year) + ")";
                         })
                         .attr("r", newR)
                         .attr("cy", d => y(d.stack_index) - newR);
 
+                    // }
+
+                    
                 }
 
 
 
 
-                // add flags - isn't working for now
-                // if(event.transform.k > 3){
-                //     dots =  groups.selectAll("flags")
-                //                     .data(function(d) {
-                //                         return d3.range(1, +d.count + 1)
-                //                     })
-                //                     .enter().append("image")
-                //                     .attr("xlink:href", d => {
-                //                         let code = d.code
-                //                         console.log(code)
-                //                         return "https://flagsapi.com/" + code + "/flat/64.png";
-                //                     })
-                //                     .attr("class", "flags")
-                //                     // .attr("r", 3.5)
-                //                     .attr("y", function(d) {
-                //                         return y(d)
-                //                     })
-                //                     // .style("fill", "blue")
-                //                     // .style("opacity", .5);
-                //                     .call(enter => enter.transition().attr("opacity", 1))
-                // }
-
-                // console.log(event.transform);
-                // console.log(event.transform.toString());
-
-                // chart.attr("transform", event.transform);
-
-                // // update the scales on the axes/gridlines
-                // // rescale does not modify the source scale, just creates an adjusted copy
-                // // yAxis.scale(event.transform.rescaleY(y))
-                // xAxis.scale(event.transform.rescaleX(x))
-
-                // // apply new scaled axes (do not use a transition since zoom triggers so many events!)
-                // d3.select("g.x.axis").call(xAxis);
+                
             }
 
         });
+    </script>
+    <svg id="'heat_map"></svg>
+    <script>
+        var file = "./holidays_new.csv";
+        // create a function that takes in zoom and the data array; output will be data as well but with x and y
+        // add x and y to each circles
+        // decide size of circles, dicide cancas into a grid - only one circle can be in a grid
+        // loop through data and figure out x (axis + transform)
+        // loop through again from position on the board to x and y 
+        // take year, convert to pixel 
+        var margin = {
+                top: 30,
+                right: 20,
+                bottom: 30,
+                left: 50
+            },
+        width = 1300 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+
+
+
+        var heat_svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var heat_map = heat_svg.append("g")
+            .attr("id", "heat_map");
+
+        d3.csv(file).then((data) => {
+
+            data = data.filter(d =>
+                d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
+            );
+                        // start heat map 
+                        date_data = {};
+            abre_to_month = {
+                'Jan':1,
+                'Feb':2,
+                'Mar':3,
+                'Apr':4,
+                'May':5,
+                'Jun':6,
+                'Jul':7,
+                'Aug':8,
+                'Sep':9,
+                'Oct':10,
+                'Nov':11,
+                'Dec':12
+
+            }
+                data.forEach(function(d) {
+                    let date = Number(d.day);
+                    let month = Number(abre_to_month[d.month]);
+                    let year = Number(d.year_of_event);
+                    let date_obj = new Date(year, month-1, date);
+                    if (date_obj in date_data) {
+                        date_data[date_obj] += 1;
+                    } else {
+                        date_data[date_obj] = 1;
+                    };
+                });
+                for(let key in date_data){
+                    console.log(typeof key)
+                }
+                let heat_map_data = [];
+                for (let key in date_data) {
+                    // console.log(typeof key)
+                    heat_map_data.push({
+                        'date':  new Date(key),
+                        'count': date_data[key],
+                    });
+                }
+                heat_map_data.sort(function(a,b){return a['date'].getTime() - b['date'].getTime()})
+                console.log(heat_map_data)
+                const years_heat = d3.group(heat_map_data, d => d.date.getUTCFullYear())
+                const years_final = Array.from(years_heat).reverse().map(d => ({key: d[0], values: d[1]}));
+                console.log(years_final)
+                // for (let value of years_heat.values()){
+                //     // console.log(1111111)
+                //     console.log(value)
+                // }
+                // for (let key of years_heat.keys()){
+                //     console.log(key)
+                // }
+                    // .key(d => d.date.getUTCFullYear())
+                    // .entries(date_data)
+                    // .reverse()
+                const cellSize = 15
+                const yearHeight = cellSize * 7 + 25
+                const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
+                const countDay = d => d.getUTCDay()
+                const timeWeek = d3.utcSunday
+                let year = heat_map.selectAll('g')
+                                .data(years_final)
+                                .join('g')
+                                .attr('transform',(d,i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
+                year.append('text')
+                    // .data(years_final)
+                    .attr('x', -5)
+                    .attr('y', -30)
+                    .attr("text-anchor", "end")
+                    .attr('font-size', 16)
+                    .attr('font-weight', 550)
+                    .attr('transform', 'rotate(270)')
+                    .text(d => d.key)
+                year.append('g')
+                    .attr('text-anchor', 'end')
+                    .selectAll('text')
+                    .data(d3.range(7).map(i => new Date(1999, 0, i)))
+                    .join('text')
+                    .attr('x', -5)
+                    .attr('y', d => (countDay(d) + 0.5) * cellSize)
+                    .attr('dy', '0.31em')
+                    .text(formatDay);
+                let all_dates = [];
+                
+            year.append('g')
+                .selectAll('rect')
+                .data(d => d.values)
+                .join('rect')
+                .attr("width", cellSize - 1.5)
+                .attr("height", cellSize - 1.5)
+                .attr("x", (d, i) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 10)
+                .attr("y", d => countDay(d.date) * cellSize + 0.5)
+
+            // TODO: Add colors
+
+            })
     </script>
 </body>
 
