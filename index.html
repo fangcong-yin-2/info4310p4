@@ -16,11 +16,11 @@
     <script>
         // Set the dimensions of the canvas / graph
         var margin = {
-            top: 30,
-            right: 20,
-            bottom: 30,
-            left: 50
-        },
+                top: 30,
+                right: 20,
+                bottom: 30,
+                left: 50
+            },
             width = 1300 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
 
@@ -36,7 +36,7 @@
         var chart = svg.append("g")
             .attr("id", "chart");
 
-        const yAxisArea = svg.append("g").attr("transform", `translate(${margin.left - 2},${margin.top})`);
+        const yAxisArea = svg.append("g").attr("transform", `translate(${margin.left-2},${margin.top})`);
         const xAxisArea = chart.append("g");
 
         var clip = svg.append("defs").append("svg:clipPath").attr("id", "clip").append("svg:rect")
@@ -64,7 +64,7 @@
             // console.log(data)
             // Get the data
             year_data = {};
-            data.forEach(function (d) {
+            data.forEach(function(d) {
                 let year = Number(d.year_of_event);
                 if (year in year_data) {
                     year_data[year] += 1;
@@ -199,10 +199,10 @@
                 .enter().append("circle")
                 .attr("class", "dot")
                 .attr("r", 3.5)
-                .attr("cy", function (d) {
+                .attr("cy", function(d) {
                     return y(Number(d.stack_index)) - 3.5
                 })
-                .attr("transform", function (d) {
+                .attr("transform", function(d) {
                     return "translate(" + x(Number(d.year)) + ".0)";
                 })
                 .attr("fill", d => colorScale(d['Continent']))
@@ -269,7 +269,7 @@
                 txt2.text(circleData['date_mdy']);
                 txt3.text('From: ' + circleData['independence_from']);
                 image.attr("xlink:href", "flags/" + circleData['code'] + ".png")
-                /*
+                    /*
                 // You can use the geoPath() generator to do all sorts of helpful things 
                 // let [xPos, yPos] = path.centroid( state.datum() );  // Get the pixel "center" of the state
       
@@ -366,13 +366,29 @@
                     //         .call(enter => enter.transition().attr("opacity", 1))
                     // }
                     // }else{
-                    dots.attr("transform", function (d) {
-                        return "translate(" + newX(d.year) + ")";
-                    })
+                    dots.attr("transform", function(d) {
+                            return "translate(" + newX(d.year) + ")";
+                        })
                         .attr("r", newR)
                         .attr("cy", d => y(d.stack_index) - newR);
 
-                    // }
+                    function mouseMove(e) {
+                        let mouse = d3.pointer(e);
+                        let this_x = newX.invert(mouse[0]);
+                        let i = bisect(year_json, this_x);
+                        let selected_d = year_json[i];
+                        // console.log(newX(selected_d.year));
+                        line.attr('x1', newX(selected_d.year))
+                            .attr('x2', newX(selected_d.year));
+
+                        focusText
+                            .html(selected_d.year)
+                            .attr('x', newX(selected_d.year))
+                            .attr('y', 0)
+                    }
+
+                    chart.on('mousemove', mouseMove)
+                        // }
 
 
                 }
@@ -395,22 +411,22 @@
         // loop through again from position on the board to x and y 
         // take year, convert to pixel 
         var margin = {
-            top: 30,
-            right: 20,
-            bottom: 30,
-            left: 50
-        },
+                top: 30,
+                right: 20,
+                bottom: 30,
+                left: 50
+            },
             width = 1300 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
-
+        heat_height = height + 600;
 
 
 
         var heat_svg = d3.select("body").append("svg")
             .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("height", heat_height + margin.top + margin.bottom)
             .append("g")
-        // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var heat_map = heat_svg.append("g")
             .attr("id", "heat_map");
@@ -437,7 +453,28 @@
                 'Dec': 12
 
             }
-            data.forEach(function (d) {
+            let weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            let wd_to_num = {
+                'Monday': 1,
+                'Tuesday': 2,
+                'Wednesday': 3,
+                'Thursday': 4,
+                'Friday': 5,
+                'Saturday': 6,
+                'Sunday': 7
+
+            };
+            months = Object.keys(abre_to_month);
+            wd_dict = {};
+            for (i in weekdays) {
+                wd = weekdays[i];
+                for (j in months) {
+                    mo = months[j];
+                    wd_dict[(mo + ',' +
+                        wd)] = 0;
+                }
+            }
+            data.forEach(function(d) {
                 let date = Number(d.day);
                 let month = Number(abre_to_month[d.month]);
                 let year = Number(d.year_of_event);
@@ -447,10 +484,10 @@
                 } else {
                     date_data[date_obj] = 1;
                 };
+                wd_dict[(d.month + ',' + d.weekday)] += 1;
+
             });
-            for (let key in date_data) {
-                console.log(typeof key)
-            }
+            console.log(wd_dict);
             let heat_map_data = [];
             for (let key in date_data) {
                 // console.log(typeof key)
@@ -459,26 +496,25 @@
                     'count': date_data[key],
                 });
             }
-            heat_map_data.sort(function (a, b) { return a['date'].getTime() - b['date'].getTime() })
-            console.log(heat_map_data)
+            heat_map_data.sort(function(a, b) {
+                return a['date'].getTime() - b['date'].getTime()
+            });
+            console.log('----');
+            console.log(heat_map_data);
             const years_heat = d3.group(heat_map_data, d => d.date.getUTCFullYear())
-            const years_final = Array.from(years_heat).reverse().map(d => ({ key: d[0], values: d[1] }));
-            console.log(years_final)
-            // for (let value of years_heat.values()){
-            //     // console.log(1111111)
-            //     console.log(value)
-            // }
-            // for (let key of years_heat.keys()){
-            //     console.log(key)
-            // }
-            // .key(d => d.date.getUTCFullYear())
-            // .entries(date_data)
-            // .reverse()
-            const cellSize = 15
+            console.log(heat_map_data);
+            const years_final = Array.from(years_heat).reverse().map(d => ({
+                key: d[0],
+                values: d[1]
+            }));
+
+            const cellSize = 30;
             const yearHeight = cellSize * 7 + 25
-            const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
-            const countDay = d => d.getUTCDay()
+                // const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
+                // const countDay = d => d.getUTCDay()
             const timeWeek = d3.utcSunday
+                // let heatScale = d3.scaleLinear().domain()
+                /*    
             let year = heat_map.selectAll('g')
                 .data(years_final)
                 .join('g')
@@ -505,19 +541,98 @@
 
             year.append('g')
                 .selectAll('rect')
-                .data(d => d.values)
+                .data(d => {
+                    console.log(d);
+                    return d.values;
+                })
                 .join('rect')
                 .attr("width", cellSize - 1.5)
                 .attr("height", cellSize - 1.5)
                 .attr("x", (d, i) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 10)
                 .attr("y", d => countDay(d.date) * cellSize + 0.5)
+                .style('fill', 'red');
+*/
 
+            let wd_final = [];
+            for (i in wd_dict) {
+                let wd_count = wd_dict[i];
+                let mo = i.split(',')[0];
+                let wd = i.split(',')[1];
+                wd_final.push({
+                    'month': mo,
+                    'weekday': wd,
+                    'count': wd_count
+                });
+            }
+            let wd_count_extent = d3.extent(Object.values(wd_dict));
+            let year = heat_map.append('g')
+                .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
+            const heatScale = d3.scaleSequential(d3.interpolateBuGn).domain(wd_count_extent);
+            let all_dates = [];
+            year.selectAll('rect').data(wd_final).join('rect')
+                .attr("width", cellSize - 1.5)
+                .attr("height", cellSize - 1.5)
+                .attr("x", d => wd_to_num[d.weekday] * cellSize + 10)
+                .attr("y", d => abre_to_month[d.month] * cellSize + 0.5)
+                .style('fill', d => heatScale(d.count));
+            let wd_to_abre = {
+                'Monday': 'MO',
+                'Tuesday': 'TU',
+                'Wednesday': 'WE',
+                'Thursday': 'TH',
+                'Friday': 'FR',
+                'Saturday': 'SA',
+                'Sunday': 'SU'
+
+            };
+            year.append('g')
+                .attr('text-anchor', 'end')
+                .selectAll('text')
+                .data(weekdays)
+                .join('text')
+                .attr('x', d => wd_to_num[d] * cellSize + 40)
+                .attr('y', -1)
+                .attr('dy', '0.31em')
+                .attr('font-size', 18)
+                .text(d => wd_to_abre[d]);
+            year.append('g')
+                .attr('text-anchor', 'end')
+                .selectAll('text')
+                .data(Object.keys(abre_to_month))
+                .join('text')
+                .attr('x', 5)
+                .attr('y', d => abre_to_month[d] * cellSize + 10)
+                .attr('dy', '0.31em')
+                .attr('font-size', 18)
+                .text(d => d);
             // TODO: Add colors
-            const heatScale = d3.scaleSequential(d3.interpolateBuGn).domain([
-                Math.floor(minValue),
-                Math.ceil(maxValue)
-            ])
+            const categoriesCount = 8;
 
+            const categories = [...Array(categoriesCount)].map((_, i) => {
+                const upperBound = wd_count_extent[1] / categoriesCount * (i + 1);
+                const lowerBound = wd_count_extent[0] / categoriesCount * i;
+
+                return {
+                    upperBound,
+                    lowerBound,
+                    color: d3.interpolateBuGn(upperBound / wd_count_extent[1])
+                };
+            });
+            const legend = heat_map.append('g')
+                .attr('transform', `translate(80,500)`);
+            const legendWidth = 25;
+            heat_map.append('text').attr('x', 80).attr('y', 480).text('Count of Independence Days');
+            legend
+                .selectAll('rect')
+                .data(categories)
+                .enter()
+                .append('rect')
+                .attr('fill', d => d.color)
+                .attr('x', (d, i) => legendWidth * i)
+                .attr('width', legendWidth)
+                .attr('height', 30);
+            let minLengendText = legend.append('text').attr('x', 10).attr('y', 50).text(wd_count_extent[0]);
+            let maxLengendText = legend.append('text').attr('x', 185).attr('y', 50).text(wd_count_extent[1]);
         })
     </script>
 </body>
