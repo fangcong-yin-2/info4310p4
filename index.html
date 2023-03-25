@@ -372,6 +372,23 @@
                         .attr("r", newR)
                         .attr("cy", d => y(d.stack_index) - newR);
 
+                        function mouseMove(e) {
+                            let mouse = d3.pointer(e);
+                            let this_x = newX.invert(mouse[0]);
+                            let i = bisect(year_json, this_x);
+                            let selected_d = year_json[i];
+                            // console.log(newX(selected_d.year));
+                            line.attr('x1', newX(selected_d.year))
+                                .attr('x2', newX(selected_d.year));
+
+                            focusText
+                                .html(selected_d.year)
+                                .attr('x', newX(selected_d.year))
+                                .attr('y', 0)
+                        }
+
+                        chart.on('mousemove', mouseMove)
+
                     // }
 
                     
