@@ -1,43 +1,74 @@
 <!DOCTYPE html>
 <html>
-<style>
-    .tooltip {
-        pointer-events: none;
-    }
-
-    .without_heat{
-        display: flex;
-        flex-direction: row;
-    }
-
-    .main_section{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .info_bar{
-        width: 400px;
-        height: 80%;
-        position: fixed;
-        top: 0;
-        left: 0;
-        padding: 10;
-        padding-top: 30;
-        /* background-image: linear-gradient(#E27D60, #C38D9E) */
-    }
-
-</style>
 
 <head>
+    <title>INFO 4310 Project 4</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <script type="text/javascript" src="https://d3js.org/d3.v7.min.js">
     </script>
 </head>
 
+<style>
+    html {
+        background-image: linear-gradient(to right, rgb(240, 255, 255), rgb(248, 240, 231));
+        width: 100%;
+    }
+
+    body {
+        margin-left: 20px;
+        margin-right: 20px;
+        color: #67132e;
+    }
+
+    h4 {
+        font-size: 40px;
+        font-weight: 500;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+        margin-top: 10;
+        margin-bottom: 10;
+        color: #67132e;
+
+    }
+
+    .info_bar {
+        width: 300px;
+        height: 450px;
+        /* position: fixed; */
+        top: 0;
+        left: 0;
+        right: 20;
+        margin-right: 20px;
+        padding: 20px;
+        /* padding-top: 30; */
+        background-image: linear-gradient(#E27D60, #C38D9E)
+    }
+
+
+    .tooltip {
+        pointer-events: none;
+    }
+
+    .without_heat {
+        display: flex;
+        flex-direction: row;
+        background: white;
+        height: 490px;
+    }
+
+    .main_section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+</style>
+
+
 <body>
-    <div class = "without_heat">
-        <div class = "info_bar">
+    <h4>When Did Nations Achieve Independence?</h4>
+    <div class="without_heat">
+        <div class="info_bar">
             <img id="flag">
             <table id="table">
                 <th id="thead"></th>
@@ -72,9 +103,9 @@
                     </td>
                 </tr>
             </table>
-            
+
         </div>
-        <div class = "main_section">
+        <div class="main_section">
             <div>
                 <button id="all">Worldwide</button>
                 <button id="Asia">Asia</button>
@@ -90,35 +121,35 @@
                 const svg = d3.select("#scatter");
                 let width = svg.attr("width")
                 let height = svg.attr("height");
-        
+
                 var margin = {
-                        top: 30,
-                        right: 20,
-                        bottom: 30,
-                        left: 50
+                    top: 30,
+                    right: 20,
+                    bottom: 30,
+                    left: 50
                 }
-        
+
                 // svg.attr("height", 500 - margin.top - margin.bottom);
                 // svg.attr("width", 1300 - margin.left - margin.right)
-        
+
                 const scatter_width = width - margin.left - margin.right;
                 const scatter_height = height - margin.top - margin.bottom;
                 svg.append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
+
                 var chart = svg.append("g")
                     .attr("id", "chart");
-        
+
                 // const yAxisArea = svg.append("g").attr("transform", `translate(${margin.left-2},${margin.top})`);
                 // const xAxisArea = chart.append("g");
-        
+
                 var clip = svg.append("defs").append("svg:clipPath").attr("id", "clip").append("svg:rect")
                     .attr("width", scatter_width).attr("height", scatter_height)
                     .attr("x", 0)
                     .attr("y", 0);
                 var scatter = svg.append('g').attr('clip-path', 'url(#clip)');
-        
-        
+
+
                 var file = "./holidays_new_3.csv";
                 // create a function that takes in zoom and the data array; output will be data as well but with x and y
                 // add x and y to each circles
@@ -127,375 +158,375 @@
                 // loop through again from position on the board to x and y 
                 // take year, convert to pixel 
                 let dots;
-        
+
                 let visit_count = 0;
-        
+
                 const request_all_data = async function (sl_cont) {
                     let data = await d3.csv(file, d3.autoType);
-        
-                    const request_scatter = async function(sl_cont){
+
+                    const request_scatter = async function (sl_cont) {
                         data = data.filter(d =>
-                        d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
-                    );
-        
-                    if(sl_cont != "all"){
-                        data = data.filter(d => d.Continent == sl_cont);
-                    }
-                    console.log(sl_cont)
-                    console.log(data)
-                    
-                    // console.log(data)
-                    // Get the data
-                    year_data = {};
-                    data.forEach(function(d) {
-                        let year = Number(d.year_of_event);
-                        if (year in year_data) {
-                            year_data[year] += 1;
-                        } else {
-                            year_data[year] = 1;
-                        };
-                    });
-                    let countries = [];
-                    for (let key in year_data) {
-                        let countries = [];
-                        let country = data.filter(d => d.year_of_event == key);
-                        for (let i = 0; i < country.length; i++) {
-                            countries.push(country[i]['code'])
+                            d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
+                        );
+
+                        if (sl_cont != "all") {
+                            data = data.filter(d => d.Continent == sl_cont);
                         }
-                        year_data[key][countries] = countries;
-                    }
-                    let continents = ['Asia', 'Europe', 'Africa', 'NorthAmerica', 'SouthAmerica', 'Oceania'];
-                    let colorScale = d3.scaleOrdinal().domain(continents).range(d3.schemeCategory10);
-        
-        
-                    // Scale the range of the data
-                    // x.domain(d3.extent(data, function(d) { return d.Value; }));
-                    delete year_data[0];
-                    let counts = Object.values(year_data);
-                    let count_extent = d3.extent(counts);
-                    let year_extent = d3.extent(Object.keys(year_data));
-                    // console.log([Number(year_extent[0]), Number(year_extent[1])]);
-        
-        
-                    let x = d3.scaleLinear().domain([Number(year_extent[0]), Number(year_extent[1])])
-                        .range([0, scatter_width]);
-                    let y = d3.scaleLinear().domain(count_extent)
-                        .range([scatter_height, 0]);
-        
-                    var xAxis;
-                    if (visit_count == 0){
-                        xAxis = svg.append("g").attr("transform", "translate(0," + (scatter_height + 5) + ")").attr('id','xAxis')
-                        .call(d3.axisBottom(x))
-                        visit_count++;
-                    }else{
-                        xAxis = d3.select("#xAxis")
-        
-                    }
-                        
-        
-                    var yAxis = d3.axisLeft(y)
-        
-        
-                    // yAxisArea.append("g").attr("class", "y axis").call(yAxis);
-                    // xAxisArea.append("g").attr("class", "x axis").call(xAxis);
-        
-                    // xAxisArea.append("g")
-                    //     .attr("class", "x axis")
-                    //     .attr("transform", "translate(0," + (height + 5) + ")")
-                    //     .call(xAxis)
-                    //     .append("text")
-                    //     .attr("class", "label")
-                    //     .attr("x", width)
-                    //     .attr("y", -6)
-                    //     .style("text-anchor", "end")
-                    //     .text("Day");
-                    /*
-                    svg.append("g")
-                        .attr("class", "y axis")
-                        .call(yAxis)
-                        .append("text")
-                        .attr("class", "label")
-                        .attr("transform", "rotate(-90)")
-                        .attr("y", 6)
-                        .attr("dy", ".71em")
-                        .style("text-anchor", "end")
-                        .text("amount");
-                        */
-                    let year_json = [];
-                    for (let key in year_data) {
-                        year_json.push({
-                            'year': Number(key),
-                            'count': year_data[key],
+                        console.log(sl_cont)
+                        console.log(data)
+
+                        // console.log(data)
+                        // Get the data
+                        year_data = {};
+                        data.forEach(function (d) {
+                            let year = Number(d.year_of_event);
+                            if (year in year_data) {
+                                year_data[year] += 1;
+                            } else {
+                                year_data[year] = 1;
+                            };
                         });
-                    }
-                    // console.log(year_json)
-        
-        
-                    // Create the mouseover information panel
-                    let tooltipWidth = 300;
-                    let tooltipHeight = 250;
-                    let tooltip = chart.append("g")
-                        .attr("class", "tooltip")
-                        .attr("visibility", "hidden");
-                    tooltip.append("rect")
-                        .attr("fill", "grey")
-                        .attr("opacity", 0.9)
-                        .attr("x", -tooltipWidth / 2.0)
-                        .attr("y", 0)
-                        .attr("width", tooltipWidth)
-                        .attr("height", tooltipHeight)
-                    let txt = tooltip.append("text")
-                        .attr("fill", "white")
-                        .attr("text-anchor", "middle")
-                        .attr("alignment-baseline", "hanging")
-                        .attr("x", 0)
-                        .attr("y", 2);
-                    let txt2 = tooltip.append("text")
-                        .attr("fill", "white")
-                        .attr("text-anchor", "right")
-                        .attr("alignment-baseline", "hanging")
-                        .attr("x", 0)
-                        .attr("y", 22);
-                    let txt3 = tooltip.append("text")
-                        .attr("fill", "white")
-                        .attr("text-anchor", "right")
-                        .attr("alignment-baseline", "hanging")
-                        .attr("x", 0)
-                        .attr("y", 40);
-                    // let image = tooltip.append('image')
-                    //     .attr('x',0)
-                    //     .attr('y',60)
-                    dots = scatter.selectAll("circle")
-                        .data(data)
-                        .join("circle")
-                        .attr("class", "dot")
-                        .attr("r", 3.5)
-                        .attr("cy", function(d) {
-                            return y(Number(d.stack_index)) - 3.5
-                        })
-                        .attr("transform", function(d) {
-                            return "translate(" + x(Number(d.year)) + ".0)";
-                        })
-                        .attr("fill", d => colorScale(d['Continent']))
-                        .style("opacity", .5)
-                        .on('click',clickCircles)
-                        .on('mouseover', mouseOverCircles)
-                        .on('mouseout', mouseOutCircles);
-                    var line = chart.append('line')
-                        .attr('id', 'line')
-                        .attr('y1', scatter_height)
-                        .attr('y2', 0)
-                        .style('stroke', 'black')
-                        .style("opacity", 0)
-                    line.transition().duration(750)
-        
-                    var focusText = chart
-                        .append('g')
-                        .append('text')
-                        .style("opacity", 0)
-                        .attr("text-anchor", "left")
-                        .attr("alignment-baseline", "middle")
-        
-        
-                    bisect = d3.bisector(year_json => year_json.year).right;
-        
-        
-        
-                    var plotZoom = d3.zoom()
-                        // .scaleExtent([0.5, 20])
-                        // .extent([0,0],[scatter_width, scatter_height])
-                        .on('zoom', plotZoomed);
-        
-                    chart
-                        .append('rect')
-                        .style("fill", "none")
-                        .style("pointer-events", "all")
-                        .attr('width', scatter_width)
-                        .attr('height', scatter_height)
-                        .on('mouseover', mouseOver)
-                        .on('mousemove', mouseMove)
-                        .on('mouseout', mouseOut)
-                        .call(plotZoom);
-    
-                    function clickCircles(){
-                        let table = d3.select('#table');
-                        let clicked_circle = d3.select(this).datum();
-                        console.log(clicked_circle['code'].toLowerCase())
+                        let countries = [];
+                        for (let key in year_data) {
+                            let countries = [];
+                            let country = data.filter(d => d.year_of_event == key);
+                            for (let i = 0; i < country.length; i++) {
+                                countries.push(country[i]['code'])
+                            }
+                            year_data[key][countries] = countries;
+                        }
+                        let continents = ['Asia', 'Europe', 'Africa', 'NorthAmerica', 'SouthAmerica', 'Oceania'];
+                        let colorScale = d3.scaleOrdinal().domain(continents).range(d3.schemeCategory10);
 
-                        // let text_title = d3.select("#table_title");
-                        // text_title.select("#table_title_content").text(title)
-                        let image = d3.select("#flag");
-                        console.log(image)
-                        image.attr("src", "flags/" + clicked_circle['code'].toLowerCase() + ".png")
 
-                        let text_country = d3.select("#name");
+                        // Scale the range of the data
+                        // x.domain(d3.extent(data, function(d) { return d.Value; }));
+                        delete year_data[0];
+                        let counts = Object.values(year_data);
+                        let count_extent = d3.extent(counts);
+                        let year_extent = d3.extent(Object.keys(year_data));
+                        // console.log([Number(year_extent[0]), Number(year_extent[1])]);
 
-                        text_country.select("#this_name").text("Country Name:     " + clicked_circle.country);
-                        let text_date = d3.select("#date");
 
-                        text_date.select("#this_date").text("Date:     " + clicked_circle.date_mdy);
-                        let text_notes = d3.select("#notes");
+                        let x = d3.scaleLinear().domain([Number(year_extent[0]), Number(year_extent[1])])
+                            .range([0, scatter_width]);
+                        let y = d3.scaleLinear().domain(count_extent)
+                            .range([scatter_height, 0]);
 
-                        text_notes.select("#this_notes").text("Event Commentarie and Notes:     " + clicked_circle.event_commemorated_and_notes);
-                        let text_ind_from = d3.select("#ind_from");
+                        var xAxis;
+                        if (visit_count == 0) {
+                            xAxis = svg.append("g").attr("transform", "translate(0," + (scatter_height + 5) + ")").attr('id', 'xAxis')
+                                .call(d3.axisBottom(x))
+                            visit_count++;
+                        } else {
+                            xAxis = d3.select("#xAxis")
 
-                        text_ind_from.select("#this_ind_from").text("Independent From:     " + clicked_circle.independence_from);
-                    }
-        
-                    function mouseOver() {
-                        line.style("opacity", 1);
-                        focusText.style("opacity", 1);
-        
-                    }
-        
-                    function mouseOverCircles(e) {
-                        tooltip.style("visibility", "visible");
-                        // Find the state SVG element and add stroke
-                        let circle = d3.select(this);
-        
-                        // Using .datum() to recover the data for the state element (because we used a .join() to make it)...
-                        // ... get the name of the state and count
-                        let circleData = circle.datum();
-                        console.log(circle)
-                        console.log(circleData)
-        
-                        txt.text(circleData['country']);
-                        txt2.text(circleData['date_mdy']);
-                        txt3.text('From: ' + circleData['independence_from']);
-                        // image.attr("xlink:href", "flags/" + circleData['code'] + ".png")
-        
-                    }
-        
-                    function mouseMove(e) {
-                        let mouse = d3.pointer(e);
-                        // console.log(mouse)
-                        let this_x = x.invert(mouse[0]);
-                        let i = bisect(year_json, this_x);
-                        let selected_d = year_json[i];
-                        // console.log(selected_d);
-                        line.attr('x1', x(selected_d.year))
-                            .attr('x2', x(selected_d.year));
-        
-                        focusText
-                            .html(selected_d.year)
-                            .attr('x', x(selected_d.year))
-                            .attr('y', 20)
-                    }
-        
-                    function mouseOut() {
-                        line.style("opacity", 0);
-                        focusText.style("opacity", 0);
-        
-                    }
-        
-                    function mouseOutCircles() {
-                        tooltip.style("visibility", "hidden");
-                    }
-        
-                    // pan and zoom starts here
-                    // var plotZoom = d3.zoom().on('zoom', plotZoomed);
-                    // svg.call(plotZoom);
-                    function plotZoomed(event) {
-                        // Do not allow zoom in if the scale is already the smallest (1 year each)
-                        if (event.transform.k <= 18) {
-        
-                            var newX = event.transform.rescaleX(x);
-                            var newY = event.transform.rescaleY(y);
-                            xAxis.call(d3.axisBottom(newX));
-        
-                            newR = Math.max(3.5, 3.5 * event.transform.k / 4);
-        
-        
-                                dots.attr("transform", function(d) {
+                        }
+
+
+                        var yAxis = d3.axisLeft(y)
+
+
+                        // yAxisArea.append("g").attr("class", "y axis").call(yAxis);
+                        // xAxisArea.append("g").attr("class", "x axis").call(xAxis);
+
+                        // xAxisArea.append("g")
+                        //     .attr("class", "x axis")
+                        //     .attr("transform", "translate(0," + (height + 5) + ")")
+                        //     .call(xAxis)
+                        //     .append("text")
+                        //     .attr("class", "label")
+                        //     .attr("x", width)
+                        //     .attr("y", -6)
+                        //     .style("text-anchor", "end")
+                        //     .text("Day");
+                        /*
+                        svg.append("g")
+                            .attr("class", "y axis")
+                            .call(yAxis)
+                            .append("text")
+                            .attr("class", "label")
+                            .attr("transform", "rotate(-90)")
+                            .attr("y", 6)
+                            .attr("dy", ".71em")
+                            .style("text-anchor", "end")
+                            .text("amount");
+                            */
+                        let year_json = [];
+                        for (let key in year_data) {
+                            year_json.push({
+                                'year': Number(key),
+                                'count': year_data[key],
+                            });
+                        }
+                        // console.log(year_json)
+
+
+                        // Create the mouseover information panel
+                        let tooltipWidth = 300;
+                        let tooltipHeight = 250;
+                        let tooltip = chart.append("g")
+                            .attr("class", "tooltip")
+                            .attr("visibility", "hidden");
+                        tooltip.append("rect")
+                            .attr("fill", "grey")
+                            .attr("opacity", 0.9)
+                            .attr("x", -tooltipWidth / 2.0)
+                            .attr("y", 0)
+                            .attr("width", tooltipWidth)
+                            .attr("height", tooltipHeight)
+                        let txt = tooltip.append("text")
+                            .attr("fill", "white")
+                            .attr("text-anchor", "middle")
+                            .attr("alignment-baseline", "hanging")
+                            .attr("x", 0)
+                            .attr("y", 2);
+                        let txt2 = tooltip.append("text")
+                            .attr("fill", "white")
+                            .attr("text-anchor", "right")
+                            .attr("alignment-baseline", "hanging")
+                            .attr("x", 0)
+                            .attr("y", 22);
+                        let txt3 = tooltip.append("text")
+                            .attr("fill", "white")
+                            .attr("text-anchor", "right")
+                            .attr("alignment-baseline", "hanging")
+                            .attr("x", 0)
+                            .attr("y", 40);
+                        // let image = tooltip.append('image')
+                        //     .attr('x',0)
+                        //     .attr('y',60)
+                        dots = scatter.selectAll("circle")
+                            .data(data)
+                            .join("circle")
+                            .attr("class", "dot")
+                            .attr("r", 3.5)
+                            .attr("cy", function (d) {
+                                return y(Number(d.stack_index)) - 3.5
+                            })
+                            .attr("transform", function (d) {
+                                return "translate(" + x(Number(d.year)) + ".0)";
+                            })
+                            .attr("fill", d => colorScale(d['Continent']))
+                            .style("opacity", .5)
+                            .on('click', clickCircles);
+                        // .on('mouseover', mouseOverCircles)
+                        // .on('mouseout', mouseOutCircles);
+                        var line = chart.append('line')
+                            .attr('id', 'line')
+                            .attr('y1', scatter_height)
+                            .attr('y2', 0)
+                            .style('stroke', 'black')
+                            .style("opacity", 0)
+                        line.transition().duration(750)
+
+                        var focusText = chart
+                            .append('g')
+                            .append('text')
+                            .style("opacity", 0)
+                            .attr("text-anchor", "left")
+                            .attr("alignment-baseline", "middle")
+
+
+                        bisect = d3.bisector(year_json => year_json.year).right;
+
+
+
+                        var plotZoom = d3.zoom()
+                            // .scaleExtent([0.5, 20])
+                            // .extent([0,0],[scatter_width, scatter_height])
+                            .on('zoom', plotZoomed);
+
+                        chart
+                            .append('rect')
+                            .style("fill", "none")
+                            .style("pointer-events", "all")
+                            .attr('width', scatter_width)
+                            .attr('height', scatter_height)
+                            .on('mouseover', mouseOver)
+                            .on('mousemove', mouseMove)
+                            .on('mouseout', mouseOut)
+                            .call(plotZoom);
+
+                        function clickCircles() {
+                            let table = d3.select('#table');
+                            let clicked_circle = d3.select(this).datum();
+                            console.log(clicked_circle['code'].toLowerCase())
+
+                            // let text_title = d3.select("#table_title");
+                            // text_title.select("#table_title_content").text(title)
+                            let image = d3.select("#flag");
+                            console.log(image)
+                            image.attr("src", "flags/" + clicked_circle['code'].toLowerCase() + ".png")
+
+                            let text_country = d3.select("#name");
+
+                            text_country.select("#this_name").text("Country Name:     " + clicked_circle.country);
+                            let text_date = d3.select("#date");
+
+                            text_date.select("#this_date").text("Date:     " + clicked_circle.date_mdy);
+                            let text_notes = d3.select("#notes");
+
+                            text_notes.select("#this_notes").text("Event Commentarie and Notes:     " + clicked_circle.event_commemorated_and_notes);
+                            let text_ind_from = d3.select("#ind_from");
+
+                            text_ind_from.select("#this_ind_from").text("Independent From:     " + clicked_circle.independence_from);
+                        }
+
+                        function mouseOver() {
+                            line.style("opacity", 1);
+                            focusText.style("opacity", 1);
+
+                        }
+
+                        function mouseOverCircles(e) {
+                            tooltip.style("visibility", "visible");
+                            // Find the state SVG element and add stroke
+                            let circle = d3.select(this);
+
+                            // Using .datum() to recover the data for the state element (because we used a .join() to make it)...
+                            // ... get the name of the state and count
+                            let circleData = circle.datum();
+                            console.log(circle)
+                            console.log(circleData)
+
+                            txt.text(circleData['country']);
+                            txt2.text(circleData['date_mdy']);
+                            txt3.text('From: ' + circleData['independence_from']);
+                            // image.attr("xlink:href", "flags/" + circleData['code'] + ".png")
+
+                        }
+
+                        function mouseMove(e) {
+                            let mouse = d3.pointer(e);
+                            // console.log(mouse)
+                            let this_x = x.invert(mouse[0]);
+                            let i = bisect(year_json, this_x);
+                            let selected_d = year_json[i];
+                            // console.log(selected_d);
+                            line.attr('x1', x(selected_d.year))
+                                .attr('x2', x(selected_d.year));
+
+                            focusText
+                                .html(selected_d.year)
+                                .attr('x', x(selected_d.year))
+                                .attr('y', 20)
+                        }
+
+                        function mouseOut() {
+                            line.style("opacity", 0);
+                            focusText.style("opacity", 0);
+
+                        }
+
+                        function mouseOutCircles() {
+                            tooltip.style("visibility", "hidden");
+                        }
+
+                        // pan and zoom starts here
+                        // var plotZoom = d3.zoom().on('zoom', plotZoomed);
+                        // svg.call(plotZoom);
+                        function plotZoomed(event) {
+                            // Do not allow zoom in if the scale is already the smallest (1 year each)
+                            if (event.transform.k <= 18) {
+
+                                var newX = event.transform.rescaleX(x);
+                                var newY = event.transform.rescaleY(y);
+                                xAxis.call(d3.axisBottom(newX));
+
+                                newR = Math.max(3.5, 3.5 * event.transform.k / 4);
+
+
+                                dots.attr("transform", function (d) {
                                     return "translate(" + newX(d.year) + ")";
                                 })
-                                .attr("r", newR)
-                                .attr("cy", d => y(d.stack_index) - newR);
-        
+                                    .attr("r", newR)
+                                    .attr("cy", d => y(d.stack_index) - newR);
+
                                 function mouseMove(e) {
                                     let mouse = d3.pointer(e);
                                     let this_x = newX.invert(mouse[0]);
                                     let i = bisect(year_json, this_x);
                                     let selected_d = year_json[i];
-        
+
                                     // console.log(newX(selected_d.year));
                                     line.attr('x1', newX(selected_d.year))
                                         .attr('x2', newX(selected_d.year));
-        
+
                                     focusText
                                         .html(selected_d.year)
                                         .attr('x', newX(selected_d.year))
                                         .attr('y', 20)
                                 }
-        
+
                                 chart.on('mousemove', mouseMove)
-        
-                            // }
-        
-                            
+
+                                // }
+
+
+                            }
                         }
+
                     }
-        
-                    }
-        
+
                     request_scatter(sl_cont)
-                    
-        
+
+
                 }
-        
+
                 request_all_data("all");
-        
-                    
-        
-        
-        
-                    // button interactions start here
-                    d3.select("button#all").on("click", function (event) {
-                        let type = event.target.id;
-                        request_all_data("all");
-        
-                    });
-                    d3.select("button#Asia").on("click", function (event) {
-                        console.log(event);
-                        let type = event.target.id;
-                        request_all_data(type);
-        
-                    });
-                    d3.select("button#Europe").on("click", function (event) {
-                        let type = event.target.id;
-                        request_all_data(type);
-        
-                    });
-                        d3.select("button#NorthAmerica").on("click", function (event) {
-                            console.log(event)
-                        let type = event.target.id;
-                        request_all_data(type);
-        
-                        });
-                        d3.select("button#SouthAmerica").on("click", function (event) {
-                        let type = event.target.id;
-                        request_all_data(type);
-        
-                        });
-                        d3.select("button#Oceania").on("click", function (event) {
-                        let type = event.target.id;
-                        request_all_data(type);
-        
-                        });
-        
-                        d3.select("button#Africa").on("click", function (event) {
-                        let type = event.target.id;
-                        request_all_data(type);
-        
-                        });
-        
-        
-        
+
+
+
+
+
+                // button interactions start here
+                d3.select("button#all").on("click", function (event) {
+                    let type = event.target.id;
+                    request_all_data("all");
+
+                });
+                d3.select("button#Asia").on("click", function (event) {
+                    console.log(event);
+                    let type = event.target.id;
+                    request_all_data(type);
+
+                });
+                d3.select("button#Europe").on("click", function (event) {
+                    let type = event.target.id;
+                    request_all_data(type);
+
+                });
+                d3.select("button#NorthAmerica").on("click", function (event) {
+                    console.log(event)
+                    let type = event.target.id;
+                    request_all_data(type);
+
+                });
+                d3.select("button#SouthAmerica").on("click", function (event) {
+                    let type = event.target.id;
+                    request_all_data(type);
+
+                });
+                d3.select("button#Oceania").on("click", function (event) {
+                    let type = event.target.id;
+                    request_all_data(type);
+
+                });
+
+                d3.select("button#Africa").on("click", function (event) {
+                    let type = event.target.id;
+                    request_all_data(type);
+
+                });
+
+
+
             </script>
         </div>
-    
+
     </div>
-    
+
     <svg id="'heat_map"></svg>
     <script>
         var file = "./holidays_new_3.csv";
@@ -506,13 +537,13 @@
         // loop through again from position on the board to x and y 
         // take year, convert to pixel 
         var margin = {
-                top: 30,
-                right: 20,
-                bottom: 30,
-                left: 50
-            }
+            top: 30,
+            right: 20,
+            bottom: 30,
+            left: 50
+        }
         width = 1300 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+            height = 500 - margin.top - margin.bottom;
         heat_height = height + 600;
 
 
@@ -521,7 +552,7 @@
             .attr("width", width + margin.left + margin.right)
             .attr("height", heat_height + margin.top + margin.bottom)
             .append("g")
-            // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var heat_map = heat_svg.append("g")
             .attr("id", "heat_map");
@@ -571,7 +602,7 @@
             }
             console.log(wd_dict);
             console.log('---')
-            data.forEach(function(d) {
+            data.forEach(function (d) {
                 let date = Number(d.day);
                 let month = Number(abre_to_month[d.month]);
                 let year = Number(d.year_of_event);
@@ -594,7 +625,7 @@
                     'count': date_data[key],
                 });
             }
-            heat_map_data.sort(function(a, b) {
+            heat_map_data.sort(function (a, b) {
                 return a['date'].getTime() - b['date'].getTime()
             });
             console.log('----');
@@ -608,46 +639,46 @@
 
             const cellSize = 30;
             const yearHeight = cellSize * 7 + 25
-                // const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
-                // const countDay = d => d.getUTCDay()
+            // const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
+            // const countDay = d => d.getUTCDay()
             const timeWeek = d3.utcSunday
-                // let heatScale = d3.scaleLinear().domain()
-                /*    
-            let year = heat_map.selectAll('g')
-                .data(years_final)
-                .join('g')
-                .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
-            year.append('text')
-                // .data(years_final)
-                .attr('x', -5)
-                .attr('y', -30)
-                .attr("text-anchor", "end")
-                .attr('font-size', 16)
-                .attr('font-weight', 550)
-                .attr('transform', 'rotate(270)')
-                .text(d => d.key)
-            year.append('g')
-                .attr('text-anchor', 'end')
-                .selectAll('text')
-                .data(d3.range(7).map(i => new Date(1999, 0, i)))
-                .join('text')
-                .attr('x', -5)
-                .attr('y', d => (countDay(d) + 0.5) * cellSize)
-                .attr('dy', '0.31em')
-                .text(formatDay);
-            let all_dates = [];
-            year.append('g')
-                .selectAll('rect')
-                .data(d => {
-                    console.log(d);
-                    return d.values;
-                })
-                .join('rect')
-                .attr("width", cellSize - 1.5)
-                .attr("height", cellSize - 1.5)
-                .attr("x", (d, i) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 10)
-                .attr("y", d => countDay(d.date) * cellSize + 0.5)
-                .style('fill', 'red');
+            // let heatScale = d3.scaleLinear().domain()
+            /*    
+        let year = heat_map.selectAll('g')
+            .data(years_final)
+            .join('g')
+            .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
+        year.append('text')
+            // .data(years_final)
+            .attr('x', -5)
+            .attr('y', -30)
+            .attr("text-anchor", "end")
+            .attr('font-size', 16)
+            .attr('font-weight', 550)
+            .attr('transform', 'rotate(270)')
+            .text(d => d.key)
+        year.append('g')
+            .attr('text-anchor', 'end')
+            .selectAll('text')
+            .data(d3.range(7).map(i => new Date(1999, 0, i)))
+            .join('text')
+            .attr('x', -5)
+            .attr('y', d => (countDay(d) + 0.5) * cellSize)
+            .attr('dy', '0.31em')
+            .text(formatDay);
+        let all_dates = [];
+        year.append('g')
+            .selectAll('rect')
+            .data(d => {
+                console.log(d);
+                return d.values;
+            })
+            .join('rect')
+            .attr("width", cellSize - 1.5)
+            .attr("height", cellSize - 1.5)
+            .attr("x", (d, i) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 10)
+            .attr("y", d => countDay(d.date) * cellSize + 0.5)
+            .style('fill', 'red');
 */
 
             let wd_final = [];
