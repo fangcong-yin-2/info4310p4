@@ -171,6 +171,8 @@
             width = 1300 - margin.left - margin.right,
                 height = 500 - margin.top - margin.bottom;
             heat_height = height + 100;
+            const continents = ['Asia', 'Europe', 'Africa', 'NorthAmerica', 'SouthAmerica', 'Oceania'];
+                        const colorScale = d3.scaleOrdinal().domain(continents).range(d3.schemeCategory10);
 
 
 
@@ -522,9 +524,7 @@
                             }
                             year_data[key][countries] = countries;
                         }
-                        let continents = ['Asia', 'Europe', 'Africa', 'NorthAmerica', 'SouthAmerica', 'Oceania'];
-                        let colorScale = d3.scaleOrdinal().domain(continents).range(d3.schemeCategory10);
-
+                        
 
                         // Scale the range of the data
                         // x.domain(d3.extent(data, function(d) { return d.Value; }));
@@ -811,40 +811,35 @@
 
 
                 // button interactions start here
-                d3.select("button#all").on("click", function (event) {
-                    let type = event.target.id;
-                    request_all_data("all");
-
-                });
-                d3.select("button#Asia").on("click", function (event) {
+                d3.select("button#Asia").style('background-color',colorScale('Asia')).on("click", function (event) {
                     console.log(event);
                     let type = event.target.id;
                     request_all_data(type);
 
                 });
-                d3.select("button#Europe").on("click", function (event) {
+                d3.select("button#Europe").style('background-color',colorScale('Europe')).on("click", function (event) {
                     let type = event.target.id;
                     request_all_data(type);
 
                 });
-                d3.select("button#NorthAmerica").on("click", function (event) {
+                d3.select("button#NorthAmerica").style('background-color',colorScale('NorthAmerica')).on("click", function (event) {
                     console.log(event)
                     let type = event.target.id;
                     request_all_data(type);
 
                 });
-                d3.select("button#SouthAmerica").on("click", function (event) {
+                d3.select("button#SouthAmerica").style('background-color',colorScale('SouthAmerica')).on("click", function (event) {
                     let type = event.target.id;
                     request_all_data(type);
 
                 });
-                d3.select("button#Oceania").on("click", function (event) {
+                d3.select("button#Oceania").style('background-color',colorScale('Oceania')).on("click", function (event) {
                     let type = event.target.id;
                     request_all_data(type);
 
                 });
 
-                d3.select("button#Africa").on("click", function (event) {
+                d3.select("button#Africa").style('background-color',colorScale('Africa')).on("click", function (event) {
                     let type = event.target.id;
                     request_all_data(type);
 
