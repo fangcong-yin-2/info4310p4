@@ -4,13 +4,16 @@
     html {
         width: 100%;
         /* height: 1200px; */
-        background-image: linear-gradient(#EBE1BB, #879F8A)
+        background-image: linear-gradient(#afc8b2, #EBE1BB)
     }
 
     body {
-        margin-left: 20px;
-        margin-right: 20px;
-        color: #67132e;
+        /* margin-left: 20px; */
+        /* margin-right: 20px; */
+        color: #343f36;
+        margin-left: 0;
+        margin-bottom: 0;
+        font-size: 20px;
     }
 
     h4 {
@@ -27,7 +30,7 @@
     h5 {
         padding-top: 120px;
         height: 20px;
-        font-size: 30px;
+        font-size: 25px;
         font-weight: 400;
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         color: white;
@@ -36,7 +39,7 @@
     }
 
     .info_bar {
-        width: 300px;
+        width: 250px;
         height: 480px;
         /* position: fixed; */
         top: 0;
@@ -45,9 +48,10 @@
         margin-right: 20px;
         padding: 20px;
         /* padding-top: 30; */
-        /* background: #646a5a; */
-        background-image: linear-gradient(to right, #3A2927, #5a4c39);
+        background: #67AB7E;
+        /* background-image: linear-gradient(to right, #3A2927, #5a4c39); */
         color: white;
+        box-shadow: 10px 10px 5px #5e6a62;
     }
 
     .tooltip {
@@ -67,6 +71,20 @@
         align-items: center;
         padding: 10px;
     }
+
+    #intro {
+        display: flex;
+        flex-direction: row;
+        padding-left: 50px;
+
+    }
+
+    #intro_words {
+        width: 1000px;
+        margin-right:100px;
+        margin-top: 100px;
+
+    }
 </style>
 
 <head>
@@ -77,6 +95,257 @@
 
 <body>
     <h4> When Did Nations Achieve Independence?</h4>
+    <div id="intro">
+        <div id="intro_words">
+            <p> To celebrate the U.S. Independence Day, we want to analyze the days that different nations achieved
+                independence.</p>
+            <p> Let's first take a look at what month and weekdays are the most popular Independence Days across
+                Nations.</p>
+            <p> As shown by the chart on the right, September and November seem to be the months with the most number of
+                nations declaring independence. In addition, Monday and Friday seem to be the most popular weekdays.
+                Among all days, the Saturdays in September has the most number of Independence Days, with 7 nations
+                declaring independence at this time.</p>
+        </div>
+        <!-- <svg id="'heat_map"></svg> -->
+        <script>
+            var file = "./holidays_new_3.csv";
+            // create a function that takes in zoom and the data array; output will be data as well but with x and y
+            // add x and y to each circles
+            // decide size of circles, dicide cancas into a grid - only one circle can be in a grid
+            // loop through data and figure out x (axis + transform)
+            // loop through again from position on the board to x and y 
+            // take year, convert to pixel 
+            var margin = {
+                top: 30,
+                right: 20,
+                bottom: 30,
+                left: 50
+            }
+            width = 1300 - margin.left - margin.right,
+                height = 500 - margin.top - margin.bottom;
+            heat_height = height + 100;
+
+
+
+            var heat_map = d3.select("#intro").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", heat_height + margin.top + margin.bottom)
+                .append("g")
+                .attr("id", "heat_map");
+            // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // var heat_map = heat_svg.append("g")
+            ;
+
+            d3.csv(file).then((data) => {
+
+                data = data.filter(d =>
+                    d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
+                );
+                // start heat map 
+                date_data = {};
+                abre_to_month = {
+                    'Jan': 1,
+                    'Feb': 2,
+                    'Mar': 3,
+                    'Apr': 4,
+                    'May': 5,
+                    'Jun': 6,
+                    'Jul': 7,
+                    'Aug': 8,
+                    'Sep': 9,
+                    'Oct': 10,
+                    'Nov': 11,
+                    'Dec': 12
+
+                }
+                let weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                let wd_to_num = {
+                    'Monday': 1,
+                    'Tuesday': 2,
+                    'Wednesday': 3,
+                    'Thursday': 4,
+                    'Friday': 5,
+                    'Saturday': 6,
+                    'Sunday': 7
+
+                };
+                months = Object.keys(abre_to_month);
+                wd_dict = {};
+                for (i in weekdays) {
+                    wd = weekdays[i];
+                    for (j in months) {
+                        mo = months[j];
+                        wd_dict[(mo + ',' +
+                            wd)] = 0;
+                    }
+                }
+                console.log(wd_dict);
+                console.log('---')
+                data.forEach(function (d) {
+                    let date = Number(d.day);
+                    let month = Number(abre_to_month[d.month]);
+                    let year = Number(d.year_of_event);
+                    let date_obj = new Date(year, month - 1, date);
+                    if (date_obj in date_data) {
+                        date_data[date_obj] += 1;
+                    } else {
+                        date_data[date_obj] = 1;
+                    };
+
+                    wd_dict[(d.month + ',' + d.weekday)] += 1;
+
+                });
+                console.log(wd_dict);
+                let heat_map_data = [];
+                for (let key in date_data) {
+                    // console.log(typeof key)
+                    heat_map_data.push({
+                        'date': new Date(key),
+                        'count': date_data[key],
+                    });
+                }
+                heat_map_data.sort(function (a, b) {
+                    return a['date'].getTime() - b['date'].getTime()
+                });
+                console.log('----');
+                console.log(heat_map_data);
+                const years_heat = d3.group(heat_map_data, d => d.date.getUTCFullYear())
+                console.log(heat_map_data);
+                const years_final = Array.from(years_heat).reverse().map(d => ({
+                    key: d[0],
+                    values: d[1]
+                }));
+
+                const cellSize = 30;
+                const yearHeight = cellSize * 7 + 25
+                // const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
+                // const countDay = d => d.getUTCDay()
+                const timeWeek = d3.utcSunday
+                // let heatScale = d3.scaleLinear().domain()
+                /*    
+            let year = heat_map.selectAll('g')
+                .data(years_final)
+                .join('g')
+                .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
+            year.append('text')
+                // .data(years_final)
+                .attr('x', -5)
+                .attr('y', -30)
+                .attr("text-anchor", "end")
+                .attr('font-size', 16)
+                .attr('font-weight', 550)
+                .attr('transform', 'rotate(270)')
+                .text(d => d.key)
+            year.append('g')
+                .attr('text-anchor', 'end')
+                .selectAll('text')
+                .data(d3.range(7).map(i => new Date(1999, 0, i)))
+                .join('text')
+                .attr('x', -5)
+                .attr('y', d => (countDay(d) + 0.5) * cellSize)
+                .attr('dy', '0.31em')
+                .text(formatDay);
+            let all_dates = [];
+            year.append('g')
+                .selectAll('rect')
+                .data(d => {
+                    console.log(d);
+                    return d.values;
+                })
+                .join('rect')
+                .attr("width", cellSize - 1.5)
+                .attr("height", cellSize - 1.5)
+                .attr("x", (d, i) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 10)
+                .attr("y", d => countDay(d.date) * cellSize + 0.5)
+                .style('fill', 'red');
+    */
+
+                let wd_final = [];
+                for (i in wd_dict) {
+                    let wd_count = wd_dict[i];
+                    let mo = i.split(',')[0];
+                    let wd = i.split(',')[1];
+                    wd_final.push({
+                        'month': mo,
+                        'weekday': wd,
+                        'count': wd_count
+                    });
+                }
+                // wd_final.forEach(d => console.log(d.count))
+                console.log(wd_final)
+                let wd_count_extent = d3.extent(Object.values(wd_dict));
+                let year = heat_map.append('g')
+                    .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
+                const heatScale = d3.scaleSequential(d3.interpolateBuGn).domain(wd_count_extent);
+                let all_dates = [];
+                year.selectAll('rect').data(wd_final).join('rect')
+                    .attr("width", cellSize - 1.5)
+                    .attr("height", cellSize - 1.5)
+                    .attr("x", d => wd_to_num[d.weekday] * cellSize + 10)
+                    .attr("y", d => abre_to_month[d.month] * cellSize + 0.5)
+                    .style('fill', d => heatScale(d.count));
+                let wd_to_abre = {
+                    'Monday': 'MO',
+                    'Tuesday': 'TU',
+                    'Wednesday': 'WE',
+                    'Thursday': 'TH',
+                    'Friday': 'FR',
+                    'Saturday': 'SA',
+                    'Sunday': 'SU'
+
+                };
+                year.append('g')
+                    .attr('text-anchor', 'end')
+                    .selectAll('text')
+                    .data(weekdays)
+                    .join('text')
+                    .attr('x', d => wd_to_num[d] * cellSize + 40)
+                    .attr('y', -1)
+                    .attr('dy', '0.31em')
+                    .attr('font-size', 18)
+                    .text(d => wd_to_abre[d]);
+                year.append('g')
+                    .attr('text-anchor', 'end')
+                    .selectAll('text')
+                    .data(Object.keys(abre_to_month))
+                    .join('text')
+                    .attr('x', 5)
+                    .attr('y', d => abre_to_month[d] * cellSize + 10)
+                    .attr('dy', '0.31em')
+                    .attr('font-size', 18)
+                    .text(d => d);
+                // TODO: Add colors
+                const categoriesCount = 8;
+
+                const categories = [...Array(categoriesCount)].map((_, i) => {
+                    const upperBound = wd_count_extent[1] / categoriesCount * (i + 1);
+                    const lowerBound = wd_count_extent[0] / categoriesCount * i;
+
+                    return {
+                        upperBound,
+                        lowerBound,
+                        color: d3.interpolateBuGn(upperBound / wd_count_extent[1])
+                    };
+                });
+                const legend = heat_map.append('g')
+                    .attr('transform', `translate(80,500)`);
+                const legendWidth = 25;
+                heat_map.append('text').attr('x', 80).attr('y', 480).text('Count of Independence Days');
+                legend
+                    .selectAll('rect')
+                    .data(categories)
+                    .enter()
+                    .append('rect')
+                    .attr('fill', d => d.color)
+                    .attr('x', (d, i) => legendWidth * i)
+                    .attr('width', legendWidth)
+                    .attr('height', 30);
+                let minLengendText = legend.append('text').attr('x', 10).attr('y', 50).text(wd_count_extent[0]);
+                let maxLengendText = legend.append('text').attr('x', 185).attr('y', 50).text(wd_count_extent[1]);
+            })
+        </script>
+    </div>
     <div class="without_heat">
         <div class="info_bar">
             <h5 id="notice">Click on the dots to learn more about the nation!</h5>
@@ -126,7 +395,7 @@
                 <button id="Africa">Africa</button>
                 <button id="Oceania">Oceania</button>
             </div>
-            <svg id="scatter" height="500" width="1300"></svg>
+            <svg id="scatter" height="500" width="1000"></svg>
             <script>
                 // Set the dimensions of the canvas / graph
                 const svg = d3.select("#scatter");
@@ -541,244 +810,6 @@
 
     </div>
 
-    <svg id="'heat_map"></svg>
-    <script>
-        var file = "./holidays_new_3.csv";
-        // create a function that takes in zoom and the data array; output will be data as well but with x and y
-        // add x and y to each circles
-        // decide size of circles, dicide cancas into a grid - only one circle can be in a grid
-        // loop through data and figure out x (axis + transform)
-        // loop through again from position on the board to x and y 
-        // take year, convert to pixel 
-        var margin = {
-            top: 30,
-            right: 20,
-            bottom: 30,
-            left: 50
-        }
-        width = 1300 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom;
-        heat_height = height + 600;
-
-
-
-        var heat_svg = d3.select("body").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", heat_height + margin.top + margin.bottom)
-            .append("g")
-        // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-        var heat_map = heat_svg.append("g")
-            .attr("id", "heat_map");
-
-        d3.csv(file).then((data) => {
-
-            data = data.filter(d =>
-                d.year_of_event !== 'NA' && Number(d.year_of_event) > 1730
-            );
-            // start heat map 
-            date_data = {};
-            abre_to_month = {
-                'Jan': 1,
-                'Feb': 2,
-                'Mar': 3,
-                'Apr': 4,
-                'May': 5,
-                'Jun': 6,
-                'Jul': 7,
-                'Aug': 8,
-                'Sep': 9,
-                'Oct': 10,
-                'Nov': 11,
-                'Dec': 12
-
-            }
-            let weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            let wd_to_num = {
-                'Monday': 1,
-                'Tuesday': 2,
-                'Wednesday': 3,
-                'Thursday': 4,
-                'Friday': 5,
-                'Saturday': 6,
-                'Sunday': 7
-
-            };
-            months = Object.keys(abre_to_month);
-            wd_dict = {};
-            for (i in weekdays) {
-                wd = weekdays[i];
-                for (j in months) {
-                    mo = months[j];
-                    wd_dict[(mo + ',' +
-                        wd)] = 0;
-                }
-            }
-            console.log(wd_dict);
-            console.log('---')
-            data.forEach(function (d) {
-                let date = Number(d.day);
-                let month = Number(abre_to_month[d.month]);
-                let year = Number(d.year_of_event);
-                let date_obj = new Date(year, month - 1, date);
-                if (date_obj in date_data) {
-                    date_data[date_obj] += 1;
-                } else {
-                    date_data[date_obj] = 1;
-                };
-
-                wd_dict[(d.month + ',' + d.weekday)] += 1;
-
-            });
-            console.log(wd_dict);
-            let heat_map_data = [];
-            for (let key in date_data) {
-                // console.log(typeof key)
-                heat_map_data.push({
-                    'date': new Date(key),
-                    'count': date_data[key],
-                });
-            }
-            heat_map_data.sort(function (a, b) {
-                return a['date'].getTime() - b['date'].getTime()
-            });
-            console.log('----');
-            console.log(heat_map_data);
-            const years_heat = d3.group(heat_map_data, d => d.date.getUTCFullYear())
-            console.log(heat_map_data);
-            const years_final = Array.from(years_heat).reverse().map(d => ({
-                key: d[0],
-                values: d[1]
-            }));
-
-            const cellSize = 30;
-            const yearHeight = cellSize * 7 + 25
-            // const formatDay = d => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"][d.getUTCDay()]
-            // const countDay = d => d.getUTCDay()
-            const timeWeek = d3.utcSunday
-            // let heatScale = d3.scaleLinear().domain()
-            /*    
-        let year = heat_map.selectAll('g')
-            .data(years_final)
-            .join('g')
-            .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
-        year.append('text')
-            // .data(years_final)
-            .attr('x', -5)
-            .attr('y', -30)
-            .attr("text-anchor", "end")
-            .attr('font-size', 16)
-            .attr('font-weight', 550)
-            .attr('transform', 'rotate(270)')
-            .text(d => d.key)
-        year.append('g')
-            .attr('text-anchor', 'end')
-            .selectAll('text')
-            .data(d3.range(7).map(i => new Date(1999, 0, i)))
-            .join('text')
-            .attr('x', -5)
-            .attr('y', d => (countDay(d) + 0.5) * cellSize)
-            .attr('dy', '0.31em')
-            .text(formatDay);
-        let all_dates = [];
-        year.append('g')
-            .selectAll('rect')
-            .data(d => {
-                console.log(d);
-                return d.values;
-            })
-            .join('rect')
-            .attr("width", cellSize - 1.5)
-            .attr("height", cellSize - 1.5)
-            .attr("x", (d, i) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 10)
-            .attr("y", d => countDay(d.date) * cellSize + 0.5)
-            .style('fill', 'red');
-*/
-
-            let wd_final = [];
-            for (i in wd_dict) {
-                let wd_count = wd_dict[i];
-                let mo = i.split(',')[0];
-                let wd = i.split(',')[1];
-                wd_final.push({
-                    'month': mo,
-                    'weekday': wd,
-                    'count': wd_count
-                });
-            }
-            // wd_final.forEach(d => console.log(d.count))
-            console.log(wd_final)
-            let wd_count_extent = d3.extent(Object.values(wd_dict));
-            let year = heat_map.append('g')
-                .attr('transform', (d, i) => `translate(40, ${yearHeight * i + cellSize * 1.5})`)
-            const heatScale = d3.scaleSequential(d3.interpolateBuGn).domain(wd_count_extent);
-            let all_dates = [];
-            year.selectAll('rect').data(wd_final).join('rect')
-                .attr("width", cellSize - 1.5)
-                .attr("height", cellSize - 1.5)
-                .attr("x", d => wd_to_num[d.weekday] * cellSize + 10)
-                .attr("y", d => abre_to_month[d.month] * cellSize + 0.5)
-                .style('fill', d => heatScale(d.count));
-            let wd_to_abre = {
-                'Monday': 'MO',
-                'Tuesday': 'TU',
-                'Wednesday': 'WE',
-                'Thursday': 'TH',
-                'Friday': 'FR',
-                'Saturday': 'SA',
-                'Sunday': 'SU'
-
-            };
-            year.append('g')
-                .attr('text-anchor', 'end')
-                .selectAll('text')
-                .data(weekdays)
-                .join('text')
-                .attr('x', d => wd_to_num[d] * cellSize + 40)
-                .attr('y', -1)
-                .attr('dy', '0.31em')
-                .attr('font-size', 18)
-                .text(d => wd_to_abre[d]);
-            year.append('g')
-                .attr('text-anchor', 'end')
-                .selectAll('text')
-                .data(Object.keys(abre_to_month))
-                .join('text')
-                .attr('x', 5)
-                .attr('y', d => abre_to_month[d] * cellSize + 10)
-                .attr('dy', '0.31em')
-                .attr('font-size', 18)
-                .text(d => d);
-            // TODO: Add colors
-            const categoriesCount = 8;
-
-            const categories = [...Array(categoriesCount)].map((_, i) => {
-                const upperBound = wd_count_extent[1] / categoriesCount * (i + 1);
-                const lowerBound = wd_count_extent[0] / categoriesCount * i;
-
-                return {
-                    upperBound,
-                    lowerBound,
-                    color: d3.interpolateBuGn(upperBound / wd_count_extent[1])
-                };
-            });
-            const legend = heat_map.append('g')
-                .attr('transform', `translate(80,500)`);
-            const legendWidth = 25;
-            heat_map.append('text').attr('x', 80).attr('y', 480).text('Count of Independence Days');
-            legend
-                .selectAll('rect')
-                .data(categories)
-                .enter()
-                .append('rect')
-                .attr('fill', d => d.color)
-                .attr('x', (d, i) => legendWidth * i)
-                .attr('width', legendWidth)
-                .attr('height', 30);
-            let minLengendText = legend.append('text').attr('x', 10).attr('y', 50).text(wd_count_extent[0]);
-            let maxLengendText = legend.append('text').attr('x', 185).attr('y', 50).text(wd_count_extent[1]);
-        })
-    </script>
 </body>
 
 </html>
